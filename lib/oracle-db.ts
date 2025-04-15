@@ -56,3 +56,15 @@ export async function getStudentFeatures(studentId: number): Promise<StudentData
       previousGrades: gradesRow?.PREVIOUS_AVERAGE || 0
     };
   }
+
+  export async function logPrediction(studentId: number, result: string, confidence: number): Promise<void> {
+    const conn = await getConnection();
+  
+    await conn.execute(
+      `INSERT INTO predictions (student_id, predicted_result, confidence) VALUES (:studentId, :result, :confidence)`,
+      [studentId, result, confidence],
+      { autoCommit: true }
+    );
+  
+    await conn.close();
+  }
