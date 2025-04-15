@@ -30,18 +30,19 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setStats({
-        totalStudents: 256,
-        atRiskCount: 42,
-        passingCount: 214,
-        improvementRate: 68,
-      })
-      setIsLoading(false)
-    }, 1000)
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/stats");
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer)
+    fetchStats();
   }, [])
 
   const COLORS = ["#4CAF50", "#8D6E63"]

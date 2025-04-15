@@ -1,158 +1,79 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Search, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Search, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type Student = {
+  ID: number;
+  NAME: string;
+  EMAIL: string;
+  CLASS: string;
+  ENROLLMENT_DATE: string;
+};
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [gradeFilter, setGradeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [sortBy, setSortBy] = useState("name")
-  const [sortDirection, setSortDirection] = useState("asc")
+  const [students, setStudents] = useState<Student[]>([]);
+  const [filtered, setFiltered] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    // Simulate fetching data from API
-    const timer = setTimeout(() => {
-      const mockStudents = [
-        {
-          id: "ST-1001",
-          name: "Emma Johnson",
-          grade: "9th",
-          status: "pass",
-          attendance: 95,
-          averageGrade: 3.8,
-          lastUpdated: "2025-03-15",
-        },
-        {
-          id: "ST-1002",
-          name: "James Smith",
-          grade: "10th",
-          status: "at-risk",
-          attendance: 78,
-          averageGrade: 2.3,
-          lastUpdated: "2025-03-14",
-        },
-        {
-          id: "ST-1003",
-          name: "Sophia Williams",
-          grade: "11th",
-          status: "pass",
-          attendance: 92,
-          averageGrade: 3.6,
-          lastUpdated: "2025-03-16",
-        },
-        {
-          id: "ST-1004",
-          name: "Liam Brown",
-          grade: "9th",
-          status: "pass",
-          attendance: 88,
-          averageGrade: 3.2,
-          lastUpdated: "2025-03-12",
-        },
-        {
-          id: "ST-1005",
-          name: "Olivia Martinez",
-          grade: "10th",
-          status: "pass",
-          attendance: 91,
-          averageGrade: 3.5,
-          lastUpdated: "2025-03-15",
-        },
-        {
-          id: "ST-1006",
-          name: "Noah Garcia",
-          grade: "9th",
-          status: "at-risk",
-          attendance: 72,
-          averageGrade: 2.1,
-          lastUpdated: "2025-03-13",
-        },
-        {
-          id: "ST-1007",
-          name: "Ava Rodriguez",
-          grade: "11th",
-          status: "pass",
-          attendance: 94,
-          averageGrade: 3.9,
-          lastUpdated: "2025-03-16",
-        },
-        {
-          id: "ST-1008",
-          name: "Ethan Davis",
-          grade: "10th",
-          status: "at-risk",
-          attendance: 75,
-          averageGrade: 2.4,
-          lastUpdated: "2025-03-14",
-        },
-        {
-          id: "ST-1009",
-          name: "Isabella Moore",
-          grade: "9th",
-          status: "pass",
-          attendance: 89,
-          averageGrade: 3.3,
-          lastUpdated: "2025-03-15",
-        },
-        {
-          id: "ST-1010",
-          name: "Mason Wilson",
-          grade: "11th",
-          status: "at-risk",
-          attendance: 68,
-          averageGrade: 2.0,
-          lastUpdated: "2025-03-13",
-        },
-      ]
-      setStudents(mockStudents)
-      setIsLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handleSort = (field) => {
-    if (sortBy === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-    } else {
-      setSortBy(field)
-      setSortDirection("asc")
-    }
-  }
-
-  const filteredStudents = students
-    .filter(
-      (student) =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.id.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .filter((student) => gradeFilter === "all" || student.grade === gradeFilter)
-    .filter((student) => statusFilter === "all" || student.status === statusFilter)
-    .sort((a, b) => {
-      let comparison = 0
-
-      if (sortBy === "name") {
-        comparison = a.name.localeCompare(b.name)
-      } else if (sortBy === "grade") {
-        comparison = a.grade.localeCompare(b.grade)
-      } else if (sortBy === "attendance") {
-        comparison = a.attendance - b.attendance
-      } else if (sortBy === "gpa") {
-        comparison = a.gpa - b.gpa
+    const fetchStudents = async () => {
+      try {
+        const res = await fetch("/api/students");
+    
+        if (!res.ok) {
+          throw new Error(`Server returned status ${res.status}`);
+        }
+    
+        const data = await res.json();
+        setStudents(data);
+        setFiltered(data); // if you're using filtered results
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        alert("Failed to load students. Check the server.");
+      } finally {
+        setIsLoading(false);
       }
+    };
+  }, []);
 
-      return sortDirection === "asc" ? comparison : -comparison
-    })
+  // Filters based on your controls
+  useEffect(() => {
+    let result = students;
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.NAME.toLowerCase().includes(term) ||
+          s.ID.toString().includes(term)
+      );
+    }
+
+    if (gradeFilter !== "all") {
+      result = result.filter((s) => s.CLASS === gradeFilter);
+    }
+
+    // Optional: implement real status filter if your DB returns status
+
+    setFiltered(result);
+  }, [searchTerm, gradeFilter, statusFilter, students]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -162,12 +83,12 @@ export default function StudentsPage() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
-  }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -193,6 +114,7 @@ export default function StudentsPage() {
         </motion.div>
       </div>
 
+      {/* Search and Filters */}
       <motion.div
         className="bg-white p-6 rounded-lg shadow-md mb-6"
         initial={{ opacity: 0, y: 20 }}
@@ -209,34 +131,24 @@ export default function StudentsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Select value={gradeFilter} onValueChange={setGradeFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Grade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Grades</SelectItem>
-                <SelectItem value="9th">9th Grade</SelectItem>
-                <SelectItem value="10th">10th Grade</SelectItem>
-                <SelectItem value="11th">11th Grade</SelectItem>
-                <SelectItem value="12th">12th Grade</SelectItem>
-              </SelectContent>
-            </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pass">Passing</SelectItem>
-                <SelectItem value="at-risk">At Risk</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={gradeFilter} onValueChange={setGradeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              <SelectItem value="9A">9A</SelectItem>
+              <SelectItem value="10A">10A</SelectItem>
+              <SelectItem value="11B">11B</SelectItem>
+              <SelectItem value="12C">12C</SelectItem>
+              {/* Add more as needed */}
+            </SelectContent>
+          </Select>
         </div>
       </motion.div>
 
+      {/* Students Grid */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
@@ -248,36 +160,28 @@ export default function StudentsPage() {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredStudents.map((student) => (
-            <motion.div key={student.id} variants={item}>
-              <Link href={`/students/${student.id}`}>
+          {filtered.map((student) => (
+            <motion.div key={student.ID} variants={item}>
+              <Link href={`/students/${student.ID}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-green-600">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-green-800">{student.name}</h3>
-                        <p className="text-sm text-muted-foreground">ID: {student.id}</p>
+                        <h3 className="text-lg font-semibold text-green-800">{student.NAME}</h3>
+                        <p className="text-sm text-muted-foreground">ID: {student.ID}</p>
                       </div>
-                      <Badge variant={student.status === "pass" ? "default" : "destructive"}>
-                        {student.status === "pass" ? "Passing" : "At Risk"}
-                      </Badge>
+                      <Badge variant="default">Enrolled</Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">Grade</p>
-                        <p className="font-medium">{student.grade}</p>
+                        <p className="text-sm text-muted-foreground">Class</p>
+                        <p className="font-medium">{student.CLASS}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Attendance</p>
-                        <p className="font-medium">{student.attendance}%</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Average Grade</p>
-                        <p className="font-medium">{student.averageGrade.toFixed(1)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Last Updated</p>
-                        <p className="font-medium">{new Date(student.lastUpdated).toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Enrollment Date</p>
+                        <p className="font-medium">
+                          {new Date(student.ENROLLMENT_DATE).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -288,16 +192,16 @@ export default function StudentsPage() {
         </motion.div>
       )}
 
-      {!isLoading && filteredStudents.length === 0 && (
+      {!isLoading && filtered.length === 0 && (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-lg text-brown-700">No students found matching your filters.</p>
           <Button
             variant="outline"
             className="mt-4"
             onClick={() => {
-              setSearchTerm("")
-              setGradeFilter("all")
-              setStatusFilter("all")
+              setSearchTerm("");
+              setGradeFilter("all");
+              setStatusFilter("all");
             }}
           >
             Clear Filters
@@ -305,5 +209,5 @@ export default function StudentsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
