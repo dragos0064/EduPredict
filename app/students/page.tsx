@@ -8,20 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 type Student = {
   ID: number;
   NAME: string;
+  GRADE: string;
+  AVERAGE_GRADE: number;
+  ATTENDANCE: number;
+  PREVIOUS_PERFORMANCE: string;
   EMAIL: string;
-  CLASS: string;
-  ENROLLMENT_DATE: string;
 };
 
 export default function StudentsPage() {
@@ -30,36 +25,32 @@ export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [gradeFilter, setGradeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         const res = await fetch("/api/students");
-    
-        if (!res.ok) {
-          throw new Error(`Server returned status ${res.status}`);
-        }
-    
+        if (!res.ok) throw new Error("Failed to fetch students");
         const data = await res.json();
         setStudents(data);
-        setFiltered(data); // if you're using filtered results
+        setFiltered(data);
       } catch (error) {
         console.error("Error fetching students:", error);
-        alert("Failed to load students. Check the server.");
+        alert("Failed to load students.");
       } finally {
         setIsLoading(false);
       }
     };
+
+    fetchStudents();
   }, []);
 
-  // Filters based on your controls
   useEffect(() => {
-    let result = students;
+    let results = students;
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(
+      results = results.filter(
         (s) =>
           s.NAME.toLowerCase().includes(term) ||
           s.ID.toString().includes(term)
@@ -67,13 +58,17 @@ export default function StudentsPage() {
     }
 
     if (gradeFilter !== "all") {
-      result = result.filter((s) => s.CLASS === gradeFilter);
+      results = results.filter((s) => s.GRADE === gradeFilter);
     }
 
-    // Optional: implement real status filter if your DB returns status
+    setFiltered(results);
+  }, [searchTerm, gradeFilter, students]);
 
-    setFiltered(result);
-  }, [searchTerm, gradeFilter, statusFilter, students]);
+  const getStatus = (student: Student) => {
+    return student.AVERAGE_GRADE >= 5 && student.ATTENDANCE >= 75
+      ? "pass"
+      : "at-risk";
+  };
 
   const container = {
     hidden: { opacity: 0 },
@@ -114,7 +109,7 @@ export default function StudentsPage() {
         </motion.div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search Bar */}
       <motion.div
         className="bg-white p-6 rounded-lg shadow-md mb-6"
         initial={{ opacity: 0, y: 20 }}
@@ -131,24 +126,9 @@ export default function StudentsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          <Select value={gradeFilter} onValueChange={setGradeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Class" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Classes</SelectItem>
-              <SelectItem value="9A">9A</SelectItem>
-              <SelectItem value="10A">10A</SelectItem>
-              <SelectItem value="11B">11B</SelectItem>
-              <SelectItem value="12C">12C</SelectItem>
-              {/* Add more as needed */}
-            </SelectContent>
-          </Select>
         </div>
       </motion.div>
 
-      {/* Students Grid */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-700"></div>
@@ -160,9 +140,10 @@ export default function StudentsPage() {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filtered.map((student) => (
-            <motion.div key={student.ID} variants={item}>
-              <Link href={`/students/${student.ID}`}>
+          {filtered.map((student) => {
+            const status = getStatus(student);
+            return (
+              <motion.div key={student.ID} variants={item}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-green-600">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
@@ -170,25 +151,33 @@ export default function StudentsPage() {
                         <h3 className="text-lg font-semibold text-green-800">{student.NAME}</h3>
                         <p className="text-sm text-muted-foreground">ID: {student.ID}</p>
                       </div>
-                      <Badge variant="default">Enrolled</Badge>
+                      <Badge variant={status === "pass" ? "default" : "destructive"}>
+                        {status === "pass" ? "Passing" : "At Risk"}
+                      </Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">Class</p>
-                        <p className="font-medium">{student.CLASS}</p>
+                        <p className="text-sm text-muted-foreground">Grade</p>
+                        <p className="font-medium">{student.GRADE}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Enrollment Date</p>
-                        <p className="font-medium">
-                          {new Date(student.ENROLLMENT_DATE).toLocaleDateString()}
-                        </p>
+                        <p className="text-sm text-muted-foreground">Attendance</p>
+                        <p className="font-medium">{student.ATTENDANCE}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Average Grade</p>
+                        <p className="font-medium">{student.AVERAGE_GRADE.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Performance</p>
+                        <p className="font-medium">{student.PREVIOUS_PERFORMANCE}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </motion.div>
       )}
 
@@ -201,7 +190,6 @@ export default function StudentsPage() {
             onClick={() => {
               setSearchTerm("");
               setGradeFilter("all");
-              setStatusFilter("all");
             }}
           >
             Clear Filters
