@@ -1,51 +1,39 @@
+import { getConnection } from "@/lib/oracle-db";
 import { NextRequest } from "next/server";
-import { getStudentFeatures, logPrediction } from "@/lib/oracle-db";
-import { predictStudentOutcome, PredictionResult } from "@/lib/ml-model";
-
-// Optional: Add types for the API response
-type ApiResponse = {
-  studentId: number;
-  prediction: PredictionResult;
-};
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { studentId: string } }
+  { params }: { params: { id: string } }
 ) {
-  const studentIdStr = params.studentId;
-  const studentId = parseInt(studentIdStr);
+  const studentId = parseInt(params.id);
 
   if (isNaN(studentId)) {
-    return new Response(JSON.stringify({ error: "Invalid student ID" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: "Invalid student ID" }), { status: 400 });
   }
 
   try {
-    // Get features from Oracle DB
-    const features = await getStudentFeatures(studentId);
+    const conn = await getConnection();
 
-    // Run the mock ML model
-    const prediction = predictStudentOutcome(features);
+    const result = await conn.execute(
+      `SELECT ID, FIRST_NAME, LAST_NAME, GRADE, AVERAGE_GRADE, ATTENDANCE, PREVIOUS_PERFORMANCE, EMAIL 
+       FROM STUDENTS 
+       WHERE ID = :id`,
+      [studentId],
+      { outFormat: 4001 } // OBJECT
+    );
 
-    // Log prediction result to Oracle
-    await logPrediction(studentId, prediction.outcome, prediction.confidence);
+    await conn.close();
 
-    const responseData: ApiResponse = {
-      studentId,
-      prediction,
-    };
+    if (!result.rows || result.rows.length === 0) {
+      return new Response(JSON.stringify({ error: "Student not found" }), { status: 404 });
+    }
 
-    return new Response(JSON.stringify(responseData), {
+    return new Response(JSON.stringify(result.rows[0]), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Prediction API error:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.error("GET /api/students/[id] error:", err);
+    return new Response(JSON.stringify({ error: "Server error" }), { status: 500 });
   }
 }

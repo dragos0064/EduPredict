@@ -143,7 +143,7 @@ export default function StudentsPage() {
           {filtered.map((student) => {
             const status = getStatus(student);
             return (
-              <motion.div key={student.ID} variants={item}>
+              <Link href={`/students/${student.ID}`} key={student.ID}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-green-600">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
@@ -175,7 +175,7 @@ export default function StudentsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </Link>
             );
           })}
         </motion.div>
