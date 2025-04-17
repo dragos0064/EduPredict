@@ -175,7 +175,7 @@ export default function StudentsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+                </Link>
             );
           })}
         </motion.div>

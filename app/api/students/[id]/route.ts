@@ -1,9 +1,10 @@
 import { getConnection } from "@/lib/oracle-db";
 import { NextRequest } from "next/server";
+import { spawn } from "child_process"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id : string } }
 ) {
   const studentId = parseInt(params.id);
 
@@ -37,3 +38,5 @@ export async function GET(
     return new Response(JSON.stringify({ error: "Server error" }), { status: 500 });
   }
 }
+
+
