@@ -139,11 +139,11 @@ export async function POST(req: NextRequest) {
         await conn!.execute(
           `
           INSERT INTO PREDICTIONS
-            (PREDICTED_RESULT, CONFIDENCE)
+            (ID, PREDICTED_RESULT, CONFIDENCE)
           VALUES
-            (:res, :conf)
+            (:id, :res, :conf)
           `,
-          { res: result, conf: confidence },
+          { id: studentId, res: result, conf: confidence },
           { autoCommit: true }
         );
       } catch (mlErr) {
