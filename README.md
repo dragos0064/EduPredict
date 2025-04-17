@@ -123,11 +123,6 @@ Start the server
 
 ## API ENDPOINTS
 
-#### Get all items
-
-```http
-  GET /api/items
-```
 
 | METHOD | URL    | Description                |
 | :-------- | :------- | :------------------------- |
